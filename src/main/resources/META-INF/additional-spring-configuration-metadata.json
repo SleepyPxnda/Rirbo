@@ -1,0 +1,18 @@
+{
+  "properties": [
+    {
+      "name": "client_id",
+      "type": "java.lang.String",
+      "description": "Description for client_id."
+    },
+    {
+      "name": "client_secret",
+      "type": "java.lang.String",
+      "description": "Description for client_secret."
+    },
+    {
+      "name": "access_token",
+      "type": "java.lang.String",
+      "description": "Description for access_token."
+    }
+  ] }
