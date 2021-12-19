@@ -27,8 +27,6 @@ public class ReportClient {
     }
 
     public ReportDTO GetReportForId(String id) {
-        logger.info("Query: " + graphQuery);
-
         String query = null;
         String variables = null;
 
@@ -36,17 +34,17 @@ public class ReportClient {
             query = GraphQlSchemaReader.getSchemaFromFileName("schema");
             variables = GraphQlSchemaReader.getSchemaFromFileName("variables");
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Failed to get GraphQL Schema", e);
         }
 
         if(query == null || variables == null){
+            logger.error("Query or variables are not accessible");
             return null;
         }
 
         GraphQlRequestBody body = new GraphQlRequestBody();
         body.setQuery(query);
         body.setVariables(variables.replace("id", id));
-
 
         return webclient
                 .post()
