@@ -9,6 +9,10 @@ public class ReportDTO {
 
     private RequestData data;
 
+    public Report getReport() {
+        return data.getReportData().getReport();
+    }
+
     @Override
     public String toString() {
         return "ReportDTO{" +
