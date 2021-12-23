@@ -3,6 +3,7 @@ package de.cloudypanda.de.rirbo.discord;
 import de.cloudypanda.de.rirbo.ContextAwareClass;
 import de.cloudypanda.de.rirbo.RirboApplication;
 import de.cloudypanda.de.rirbo.warcraftlogs.ReportHandler;
+import de.cloudypanda.de.rirbo.warcraftlogs.models.Actor;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.Encounter;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.Fight;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.ReportDTO;
@@ -68,6 +69,8 @@ public class InteractionEventHandler extends ListenerAdapter {
 
     public EmbedBuilder createLogEmbed(ReportDTO report){
 
+        System.out.println(report.getReport().getRankings().getData());
+
         //Basic Setup
         EmbedBuilder builder = new EmbedBuilder();
         builder.setTitle("<RI> | " + report.getReport().getTitle());
@@ -75,8 +78,6 @@ public class InteractionEventHandler extends ListenerAdapter {
         builder.setFooter("Code: " + report.getReport().getCode());
 
         //Kills and Fights Section
-        HashMap<Fight, Encounter> raidList = new HashMap<>();
-
         StringBuilder bossField = new StringBuilder();
         StringBuilder killField = new StringBuilder();
         StringBuilder triesField = new StringBuilder();
@@ -88,8 +89,8 @@ public class InteractionEventHandler extends ListenerAdapter {
             if(fightsForEncounter.size() == 0) return;
 
             Fight bestFight = fightsForEncounter.stream().min(Comparator.comparingDouble(Fight::getFightPercentage)).get();
-            float bossPerc = bestFight.getBossPercentage();
-            float fightPerc = bestFight.getFightPercentage();
+            float bossPercentage = bestFight.getBossPercentage();
+            float fightPercentage = bestFight.getFightPercentage();
 
             bossField.append(encounter.getName()).append("\n");
             triesField.append(fightsForEncounter.size()).append("\n");
@@ -97,7 +98,7 @@ public class InteractionEventHandler extends ListenerAdapter {
             if(fightsForEncounter.size() == 1){
                 killField.append(":small_orange_diamond:").append("\n");
             }else {
-                killField.append(bestFight.getKill() ? ":small_blue_diamond:" : "BP: " + bossPerc + "% FP: " + fightPerc + "%").append("\n");
+                killField.append(bestFight.getKill() ? ":small_blue_diamond:" : "BP: " + bossPercentage + "% FP: " + fightPercentage + "%").append("\n");
 
             }
         });
@@ -107,38 +108,46 @@ public class InteractionEventHandler extends ListenerAdapter {
         builder.addField("Tries", triesField.toString(), true);
         builder.addField("Kill", killField.toString(), true);
 
+        //Decide which view for the Actors
+        if(report.getReport().getRankings().getData().size() == 0){
+            //Basic Actors Section when detailed data isn't available
+            String basicActors = GetBasicActors(report.getReport().getMasterData().getActors());
+            builder.addField("Participants", basicActors, false);
+        } else {
 
-        // Actors Section
-        StringBuilder sb = new StringBuilder();
-        int actorLimit = 15;
-
-        report.getReport().getMasterData().getActors()
-                .forEach(actor -> {
-                    if(actor.getId() > actorLimit) return;
-                            sb.append(actor.getName())
-                                    .append(" - ")
-                                    .append(actor.getSubType())
-                                    .append("\n");
-                        });
-        int actorAmount = report.getReport().getMasterData().getActors().size();
-
-        if(actorAmount > 15){
-            sb.append("__... and ").append(actorAmount - actorLimit).append(" more ...__");
         }
 
-        builder.addField("Participants", sb.toString(), false);
-
+        // Link Section
         String warcraftlogsLink = "https://warcraftlogs.com/reports/" + report.getReport().getCode();
         String wipefestLink = "https://www.wipefest.gg/report/" + report.getReport().getCode();
         String wowanalyzerLink = "https://wowanalyzer.com/report/" + report.getReport().getCode();
 
-        // Link Section
         builder.addField("Links",
                 String.format("[WarcraftLogs](%s) \n [Wipefest](%s) \n [WoWAnalyzer](%s)",
                         warcraftlogsLink, wipefestLink, wowanalyzerLink),
                 true);
 
         return builder;
+    }
+
+    private String GetBasicActors(List<Actor> actors){
+        StringBuilder sb = new StringBuilder();
+        int actorLimit = 15;
+
+        actors.forEach(actor -> {
+                    if(actor.getId() > actorLimit) return;
+                    sb.append(actor.getName())
+                            .append(" - ")
+                            .append(actor.getSubType())
+                            .append("\n");
+                });
+        int actorAmount = actors.size();
+
+        if(actorAmount > 15){
+            sb.append("__... and ").append(actorAmount - actorLimit).append(" more ...__");
+        }
+
+        return sb.toString();
     }
 
 }
