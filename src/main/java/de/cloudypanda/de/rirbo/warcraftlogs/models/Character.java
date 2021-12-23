@@ -41,7 +41,6 @@ public class Character {
     }
 
     public String GetSpecAsIcon() {
-        System.out.println(subType + " - " + spec);
         switch(subType.toLowerCase(Locale.ROOT)){
             case "warrior":
                 return EmojiStorage.WARRIOR_SWORD;

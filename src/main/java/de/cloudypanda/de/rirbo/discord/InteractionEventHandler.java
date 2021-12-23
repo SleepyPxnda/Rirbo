@@ -135,6 +135,11 @@ public class InteractionEventHandler extends ListenerAdapter {
             builder.addField("Tanks", tankField.toString(), true);
             builder.addField("Healers", healerField.toString(), true);
             builder.addField("DPS", dpsField.toString(), true);
+
+            System.out.println("Tanklenght: " + tankField.toString().length());
+            System.out.println("DPSlenght: " + dpsField.toString().length());
+            System.out.println("Healer: " + healerField.toString().length());
+
         }
 
         // Link Section
@@ -160,7 +165,7 @@ public class InteractionEventHandler extends ListenerAdapter {
                         (oldValue, newValue) -> oldValue, LinkedHashMap::new))
                 .forEach((character, integer) -> {
                     limiter.getAndIncrement();
-                    if(limiter.get() >= 5) return;
+                    if(limiter.get() > 10) return;
 
                     builder.append(GetColorForParse(integer / fightCount))
                             .append(" ")
@@ -171,8 +176,8 @@ public class InteractionEventHandler extends ListenerAdapter {
 
                 });
 
-        if(limiter.get() <= 6) return;
-        builder.append("+ ").append(map.size() - 5).append(" ...");
+        if(limiter.get() <= 10) return;
+        builder.append("+ ").append(map.size() - 10).append(" ...");
     }
 
     private String GetBasicActors(List<Actor> actors){
@@ -201,9 +206,5 @@ public class InteractionEventHandler extends ListenerAdapter {
         if(parse >= 50 && parse <= 74) return EmojiStorage.BLUE_DIAMOND;
         if(parse >= 75 && parse <= 99) return EmojiStorage.PURPLE_DIAMOND;
         return EmojiStorage.GRAY_DIAMOND;
-    }
-
-    private String GetSwordForClass(String spec){
-        return "";
     }
 }
