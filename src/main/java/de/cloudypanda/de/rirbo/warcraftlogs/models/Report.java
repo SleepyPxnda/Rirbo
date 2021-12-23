@@ -21,5 +21,5 @@ public class Report {
 
     private Zone zone;
 
-    private RankingsDTO rankings;
+    private Rankings rankings;
 }
