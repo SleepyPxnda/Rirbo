@@ -28,6 +28,7 @@ query reportById($report: String) {
                     name
                 }
             }
+            rankings(playerMetric: dps)
         }
     }
 }
