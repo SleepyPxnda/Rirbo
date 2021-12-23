@@ -1,13 +1,15 @@
 package de.cloudypanda.de.rirbo.warcraftlogs.models;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.List;
 
-@Getter
 @ToString
-public class ReportData {
-    private Report report;
+@Getter
+@NoArgsConstructor
+public class Rankings {
+    public List<Ranking> data;
 }
 

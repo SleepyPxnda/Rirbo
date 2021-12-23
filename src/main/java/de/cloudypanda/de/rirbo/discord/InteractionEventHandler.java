@@ -1,27 +1,22 @@
 package de.cloudypanda.de.rirbo.discord;
 
 import de.cloudypanda.de.rirbo.ContextAwareClass;
-import de.cloudypanda.de.rirbo.RirboApplication;
 import de.cloudypanda.de.rirbo.warcraftlogs.ReportHandler;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.Encounter;
+import de.cloudypanda.de.rirbo.warcraftlogs.models.Actor;
+import de.cloudypanda.de.rirbo.warcraftlogs.models.Character;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.Fight;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.ReportDTO;
-import lombok.NoArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
@@ -58,7 +53,6 @@ public class InteractionEventHandler extends ListenerAdapter {
             return;
         }
 
-
         EmbedBuilder builder = createLogEmbed(report);
         builder.setAuthor(event.getUser().getAsTag());
         MessageEmbed embed = builder.build();
@@ -75,8 +69,6 @@ public class InteractionEventHandler extends ListenerAdapter {
         builder.setFooter("Code: " + report.getReport().getCode());
 
         //Kills and Fights Section
-        HashMap<Fight, Encounter> raidList = new HashMap<>();
-
         StringBuilder bossField = new StringBuilder();
         StringBuilder killField = new StringBuilder();
         StringBuilder triesField = new StringBuilder();
@@ -88,16 +80,16 @@ public class InteractionEventHandler extends ListenerAdapter {
             if(fightsForEncounter.size() == 0) return;
 
             Fight bestFight = fightsForEncounter.stream().min(Comparator.comparingDouble(Fight::getFightPercentage)).get();
-            float bossPerc = bestFight.getBossPercentage();
-            float fightPerc = bestFight.getFightPercentage();
+            float bossPercentage = bestFight.getBossPercentage();
+            float fightPercentage = bestFight.getFightPercentage();
 
             bossField.append(encounter.getName()).append("\n");
             triesField.append(fightsForEncounter.size()).append("\n");
 
             if(fightsForEncounter.size() == 1){
-                killField.append(":small_orange_diamond:").append("\n");
+                killField.append(EmojiStorage.ORANGE_DIAMOND).append("\n");
             }else {
-                killField.append(bestFight.getKill() ? ":small_blue_diamond:" : "BP: " + bossPerc + "% FP: " + fightPerc + "%").append("\n");
+                killField.append(bestFight.getKill() ? EmojiStorage.DARKGREEN_DIAMOND : "BP: " + bossPercentage + "% FP: " + fightPercentage + "%").append("\n");
 
             }
         });
@@ -107,32 +99,49 @@ public class InteractionEventHandler extends ListenerAdapter {
         builder.addField("Tries", triesField.toString(), true);
         builder.addField("Kill", killField.toString(), true);
 
+        //Decide which view for the Actors
+        if(report.getReport().getRankings().getData().size() == 0){
+            //Basic Actors Section when detailed data isn't available
+            String basicActors = GetBasicActors(report.getReport().getMasterData().getActors());
+            builder.addField("Participants", basicActors, false);
+        } else {
+            HashMap<Character, Integer> parseMapDPS = new HashMap<>();
+            HashMap<Character, Integer> parseMapHealer = new HashMap<>();
+            HashMap<Character, Integer> parseMapTank = new HashMap<>();
 
-        // Actors Section
-        StringBuilder sb = new StringBuilder();
-        int actorLimit = 15;
+            report.getReport().getRankings().getData().forEach( ranking -> {
+                ranking.getRoles().getDps().getCharacters().forEach(character -> {
+                    parseMapDPS.put(character, parseMapDPS.getOrDefault(character, 0) + character.getBracketPercent());
+                });
 
-        report.getReport().getMasterData().getActors()
-                .forEach(actor -> {
-                    if(actor.getId() > actorLimit) return;
-                            sb.append(actor.getName())
-                                    .append(" - ")
-                                    .append(actor.getSubType())
-                                    .append("\n");
-                        });
-        int actorAmount = report.getReport().getMasterData().getActors().size();
+                ranking.getRoles().getHealers().getCharacters().forEach(character -> {
+                    parseMapHealer.put(character, parseMapHealer.getOrDefault(character, 0) + character.getBracketPercent());
+                });
 
-        if(actorAmount > 15){
-            sb.append("__... and ").append(actorAmount - actorLimit).append(" more ...__");
+                ranking.getRoles().getTanks().getCharacters().forEach(character -> {
+                    parseMapTank.put(character, parseMapTank.getOrDefault(character, 0) + character.getBracketPercent());
+                });
+            });
+
+            StringBuilder dpsField = new StringBuilder();
+            StringBuilder healerField = new StringBuilder();
+            StringBuilder tankField = new StringBuilder();
+            int fightCount = report.getReport().getRankings().getData().size();
+
+            SortHashMapAndBuildString(parseMapDPS, dpsField, fightCount);
+            SortHashMapAndBuildString(parseMapHealer, healerField, fightCount);
+            SortHashMapAndBuildString(parseMapTank, tankField, fightCount);
+
+            builder.addField("Tanks", tankField.toString(), true);
+            builder.addField("Healers", healerField.toString(), true);
+            builder.addField("DPS", dpsField.toString(), true);
         }
 
-        builder.addField("Participants", sb.toString(), false);
-
+        // Link Section
         String warcraftlogsLink = "https://warcraftlogs.com/reports/" + report.getReport().getCode();
         String wipefestLink = "https://www.wipefest.gg/report/" + report.getReport().getCode();
         String wowanalyzerLink = "https://wowanalyzer.com/report/" + report.getReport().getCode();
 
-        // Link Section
         builder.addField("Links",
                 String.format("[WarcraftLogs](%s) \n [Wipefest](%s) \n [WoWAnalyzer](%s)",
                         warcraftlogsLink, wipefestLink, wowanalyzerLink),
@@ -141,4 +150,60 @@ public class InteractionEventHandler extends ListenerAdapter {
         return builder;
     }
 
+    private void SortHashMapAndBuildString(HashMap<Character, Integer> map, StringBuilder builder, int fightCount) {
+        AtomicInteger limiter = new AtomicInteger(0);
+        map.entrySet().stream()
+                .sorted(Map.Entry.<Character, Integer>comparingByValue().reversed())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue, LinkedHashMap::new))
+                .forEach((character, integer) -> {
+                    limiter.getAndIncrement();
+                    if(limiter.get() >= 5) return;
+
+                    builder.append(GetColorForParse(integer / fightCount))
+                            .append(" ")
+                            .append(character.GetSpecAsIcon())
+                            .append(" - ")
+                            .append(character.getName())
+                            .append("\n");
+
+                });
+
+        if(limiter.get() <= 6) return;
+        builder.append("+ ").append(map.size() - 5).append(" ...");
+    }
+
+    private String GetBasicActors(List<Actor> actors){
+        StringBuilder sb = new StringBuilder();
+        int actorLimit = 15;
+
+        actors.forEach(actor -> {
+                    if(actor.getId() > actorLimit) return;
+                    sb.append(actor.getName())
+                            .append(" - ")
+                            .append(actor.getSubType())
+                            .append("\n");
+                });
+        int actorAmount = actors.size();
+
+        if(actorAmount > 15){
+            sb.append("__... and ").append(actorAmount - actorLimit).append(" more ...__");
+        }
+
+        return sb.toString();
+    }
+
+    private String GetColorForParse(int parse){
+        if(parse == 100) return EmojiStorage.YELLOW_DIAMOND;
+        if(parse >= 25 && parse <= 49) return EmojiStorage.GREEN_DIAMOND;
+        if(parse >= 50 && parse <= 74) return EmojiStorage.BLUE_DIAMOND;
+        if(parse >= 75 && parse <= 99) return EmojiStorage.PURPLE_DIAMOND;
+        return EmojiStorage.GRAY_DIAMOND;
+    }
+
+    private String GetSwordForClass(String spec){
+        return "";
+    }
 }

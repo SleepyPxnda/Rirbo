@@ -5,8 +5,9 @@ import lombok.ToString;
 
 @ToString
 @Getter
-public class Encounter {
-    private Integer id;
-    private String name;
+public class Guild {
+    public int id;
+    public String name;
+    public int faction;
+    public Server server;
 }
-

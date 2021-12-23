@@ -3,11 +3,10 @@ package de.cloudypanda.de.rirbo.warcraftlogs.models;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.List;
-
-@Getter
 @ToString
-public class ReportData {
-    private Report report;
+@Getter
+public class Roles {
+    public Tanks tanks;
+    public Healers healers;
+    public Dps dps;
 }
-

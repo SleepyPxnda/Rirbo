@@ -6,9 +6,10 @@ import lombok.ToString;
 
 import java.util.List;
 
-@Getter
 @ToString
 @NoArgsConstructor
-public class Zone {
-    private List<Encounter> encounters;
+@Getter
+public class Healers {
+    public String name;
+    public List<Character> characters;
 }
