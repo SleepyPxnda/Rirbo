@@ -2,11 +2,13 @@ package de.cloudypanda.de.rirbo.warcraftlogs.models;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
 
 @NoArgsConstructor
 @Getter
+@ToString
 public class Fight {
     private Integer difficulty;
     private Integer encounterID;
@@ -15,17 +17,4 @@ public class Fight {
     private Float fightPercentage;
     private List<Integer> friendlyPlayers;
     private Boolean kill;
-
-    @Override
-    public String toString() {
-        return "Fight{" +
-                "difficulty=" + difficulty +
-                ", encounterID=" + encounterID +
-                ", averageItemLevel=" + averageItemLevel +
-                ", bossPercentage=" + bossPercentage +
-                ", fightPercentage=" + fightPercentage +
-                ", friendlyPlayers=" + friendlyPlayers +
-                ", kill=" + kill +
-                '}';
-    }
 }

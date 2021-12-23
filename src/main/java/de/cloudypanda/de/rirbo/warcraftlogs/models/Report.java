@@ -1,10 +1,14 @@
 package de.cloudypanda.de.rirbo.warcraftlogs.models;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
 
 @Getter
+@ToString
+@NoArgsConstructor
 public class Report {
     private String title;
     private Long startTime;
@@ -17,16 +21,5 @@ public class Report {
 
     private Zone zone;
 
-    @Override
-    public String toString() {
-        return "Report{" +
-                "title='" + title + '\'' +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
-                ", code='" + code + '\'' +
-                ", fights=" + fights +
-                ", masterData=" + masterData +
-                ", zone=" + zone +
-                '}';
-    }
+    private RankingsDTO rankings;
 }
