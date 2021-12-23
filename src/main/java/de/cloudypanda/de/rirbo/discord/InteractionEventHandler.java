@@ -1,27 +1,22 @@
 package de.cloudypanda.de.rirbo.discord;
 
 import de.cloudypanda.de.rirbo.ContextAwareClass;
-import de.cloudypanda.de.rirbo.RirboApplication;
 import de.cloudypanda.de.rirbo.warcraftlogs.ReportHandler;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.Actor;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.Character;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.Encounter;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.Fight;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.ReportDTO;
-import lombok.NoArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
@@ -58,7 +53,6 @@ public class InteractionEventHandler extends ListenerAdapter {
             return;
         }
 
-
         EmbedBuilder builder = createLogEmbed(report);
         builder.setAuthor(event.getUser().getAsTag());
         MessageEmbed embed = builder.build();
@@ -93,9 +87,9 @@ public class InteractionEventHandler extends ListenerAdapter {
             triesField.append(fightsForEncounter.size()).append("\n");
 
             if(fightsForEncounter.size() == 1){
-                killField.append(":small_orange_diamond:").append("\n");
+                killField.append(EmojiStorage.ORANGE_DIAMOND).append("\n");
             }else {
-                killField.append(bestFight.getKill() ? ":small_blue_diamond:" : "BP: " + bossPercentage + "% FP: " + fightPercentage + "%").append("\n");
+                killField.append(bestFight.getKill() ? EmojiStorage.DARKGREEN_DIAMOND : "BP: " + bossPercentage + "% FP: " + fightPercentage + "%").append("\n");
 
             }
         });
@@ -111,21 +105,21 @@ public class InteractionEventHandler extends ListenerAdapter {
             String basicActors = GetBasicActors(report.getReport().getMasterData().getActors());
             builder.addField("Participants", basicActors, false);
         } else {
-            HashMap<String, Integer> parseMapDPS = new HashMap<>();
-            HashMap<String, Integer> parseMapHealer = new HashMap<>();
-            HashMap<String, Integer> parseMapTank = new HashMap<>();
+            HashMap<Character, Integer> parseMapDPS = new HashMap<>();
+            HashMap<Character, Integer> parseMapHealer = new HashMap<>();
+            HashMap<Character, Integer> parseMapTank = new HashMap<>();
 
             report.getReport().getRankings().getData().forEach( ranking -> {
                 ranking.getRoles().getDps().getCharacters().forEach(character -> {
-                    parseMapDPS.put(character.getName(), parseMapDPS.getOrDefault(character.getName(), 0) + character.getBracketPercent());
+                    parseMapDPS.put(character, parseMapDPS.getOrDefault(character, 0) + character.getBracketPercent());
                 });
 
                 ranking.getRoles().getHealers().getCharacters().forEach(character -> {
-                    parseMapHealer.put(character.getName(), parseMapHealer.getOrDefault(character.getName(), 0) + character.getBracketPercent());
+                    parseMapHealer.put(character, parseMapHealer.getOrDefault(character, 0) + character.getBracketPercent());
                 });
 
                 ranking.getRoles().getTanks().getCharacters().forEach(character -> {
-                    parseMapTank.put(character.getName(), parseMapTank.getOrDefault(character.getName(), 0) + character.getBracketPercent());
+                    parseMapTank.put(character, parseMapTank.getOrDefault(character, 0) + character.getBracketPercent());
                 });
             });
 
@@ -156,16 +150,29 @@ public class InteractionEventHandler extends ListenerAdapter {
         return builder;
     }
 
-    private void SortHashMapAndBuildString(HashMap<String, Integer> map, StringBuilder builder, int fightCount) {
+    private void SortHashMapAndBuildString(HashMap<Character, Integer> map, StringBuilder builder, int fightCount) {
+        AtomicInteger limiter = new AtomicInteger(0);
         map.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .sorted(Map.Entry.<Character, Integer>comparingByValue().reversed())
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
                         (oldValue, newValue) -> oldValue, LinkedHashMap::new))
                 .forEach((character, integer) -> {
-                    builder.append(GetColorForParse(integer / fightCount)).append(" - ").append(character).append("\n");
+                    limiter.getAndIncrement();
+                    if(limiter.get() >= 5) return;
+
+                    builder.append(GetColorForParse(integer / fightCount))
+                            .append(" ")
+                            .append(character.GetSpecAsIcon())
+                            .append(" - ")
+                            .append(character.getName())
+                            .append("\n");
+
                 });
+
+        if(limiter.get() <= 6) return;
+        builder.append("+ ").append(map.size() - 5).append(" ...");
     }
 
     private String GetBasicActors(List<Actor> actors){
@@ -189,10 +196,14 @@ public class InteractionEventHandler extends ListenerAdapter {
     }
 
     private String GetColorForParse(int parse){
-        if(parse == 100) return ":orange_square:";
-        if(parse >= 25 && parse <= 49) return ":green_square:";
-        if(parse >= 50 && parse <= 74) return ":blue_square:";
-        if(parse >= 75 && parse <= 99) return ":purple_square:";
-        return ":black_large_square:";
+        if(parse == 100) return EmojiStorage.YELLOW_DIAMOND;
+        if(parse >= 25 && parse <= 49) return EmojiStorage.GREEN_DIAMOND;
+        if(parse >= 50 && parse <= 74) return EmojiStorage.BLUE_DIAMOND;
+        if(parse >= 75 && parse <= 99) return EmojiStorage.PURPLE_DIAMOND;
+        return EmojiStorage.GRAY_DIAMOND;
+    }
+
+    private String GetSwordForClass(String spec){
+        return "";
     }
 }
