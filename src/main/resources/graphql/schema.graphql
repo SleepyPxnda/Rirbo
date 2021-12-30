@@ -28,8 +28,8 @@ query reportById($report: String) {
                     name
                 }
             }
-            dpsParses: rankings(playerMetric: dps)
-            hpsParses: rankings(playerMetric: hps)
+            dpsParses: rankings(playerMetric: dps, compare: Parses)
+            hpsParses: rankings(playerMetric: hps, compare: Parses)
         }
     }
 }
