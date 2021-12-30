@@ -1,11 +1,11 @@
 package de.cloudypanda.de.rirbo.discord;
 
+import com.iwebpp.crypto.TweetNaclFast;
 import de.cloudypanda.de.rirbo.ContextAwareClass;
+import de.cloudypanda.de.rirbo.warcraftlogs.RankingHandler;
 import de.cloudypanda.de.rirbo.warcraftlogs.ReportHandler;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.Actor;
+import de.cloudypanda.de.rirbo.warcraftlogs.models.*;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.Character;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.Fight;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.ReportDTO;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -74,8 +74,7 @@ public class InteractionEventHandler extends ListenerAdapter {
         StringBuilder triesField = new StringBuilder();
 
         report.getReport().getZone().getEncounters().forEach(encounter -> {
-            List<Fight> fightsForEncounter = report.getReport().getFights().stream()
-                    .filter(fight -> fight.getEncounterID().equals(encounter.getId())).collect(Collectors.toList());
+            List<Fight> fightsForEncounter = report.getReport().GetFightsForEncounter(encounter.getId());
 
             if(fightsForEncounter.size() == 0) return;
 
@@ -87,11 +86,12 @@ public class InteractionEventHandler extends ListenerAdapter {
             triesField.append(fightsForEncounter.size()).append("\n");
 
             if(fightsForEncounter.size() == 1){
-                killField.append(EmojiStorage.ORANGE_DIAMOND).append("\n");
+                killField.append(EmojiStorage.ORANGE_DIAMOND);
             }else {
-                killField.append(bestFight.getKill() ? EmojiStorage.DARKGREEN_DIAMOND : "BP: " + bossPercentage + "% FP: " + fightPercentage + "%").append("\n");
-
+                killField.append(bestFight.getKill() ? EmojiStorage.DARKGREEN_DIAMOND : "BP: " + bossPercentage + "% FP: " + fightPercentage + "%");
             }
+
+            killField.append("\n");
         });
 
         //Add Fields for kills
@@ -100,84 +100,34 @@ public class InteractionEventHandler extends ListenerAdapter {
         builder.addField("Kill", killField.toString(), true);
 
         //Decide which view for the Actors
-        if(report.getReport().getRankings().getData().size() == 0){
+        int fightCount = report.getReport().getDpsParses().getData().size();
+
+        if(fightCount == 0){
             //Basic Actors Section when detailed data isn't available
             String basicActors = GetBasicActors(report.getReport().getMasterData().getActors());
             builder.addField("Participants", basicActors, false);
-        } else {
-            HashMap<Character, Integer> parseMapDPS = new HashMap<>();
-            HashMap<Character, Integer> parseMapHealer = new HashMap<>();
-            HashMap<Character, Integer> parseMapTank = new HashMap<>();
-
-            report.getReport().getRankings().getData().forEach( ranking -> {
-                ranking.getRoles().getDps().getCharacters().forEach(character -> {
-                    parseMapDPS.put(character, parseMapDPS.getOrDefault(character, 0) + character.getBracketPercent());
-                });
-
-                ranking.getRoles().getHealers().getCharacters().forEach(character -> {
-                    parseMapHealer.put(character, parseMapHealer.getOrDefault(character, 0) + character.getBracketPercent());
-                });
-
-                ranking.getRoles().getTanks().getCharacters().forEach(character -> {
-                    parseMapTank.put(character, parseMapTank.getOrDefault(character, 0) + character.getBracketPercent());
-                });
-            });
-
-            StringBuilder dpsField = new StringBuilder();
-            StringBuilder healerField = new StringBuilder();
-            StringBuilder tankField = new StringBuilder();
-            int fightCount = report.getReport().getRankings().getData().size();
-
-            SortHashMapAndBuildString(parseMapDPS, dpsField, fightCount);
-            SortHashMapAndBuildString(parseMapHealer, healerField, fightCount);
-            SortHashMapAndBuildString(parseMapTank, tankField, fightCount);
-
-            builder.addField("Tanks", tankField.toString(), true);
-            builder.addField("Healers", healerField.toString(), true);
-            builder.addField("DPS", dpsField.toString(), true);
-
-            System.out.println("Tanklenght: " + tankField.toString().length());
-            System.out.println("DPSlenght: " + dpsField.toString().length());
-            System.out.println("Healer: " + healerField.toString().length());
-
+            AddStringSectionToEmbed(builder, report.getReport().getCode());
+            return builder;
         }
 
-        // Link Section
-        String warcraftlogsLink = "https://warcraftlogs.com/reports/" + report.getReport().getCode();
-        String wipefestLink = "https://www.wipefest.gg/report/" + report.getReport().getCode();
-        String wowanalyzerLink = "https://wowanalyzer.com/report/" + report.getReport().getCode();
+        RankingHandler handler = new RankingHandler(report.getReport().getDpsParses().getData(), report.getReport().getHpsParses().getData());
 
-        builder.addField("Links",
-                String.format("[WarcraftLogs](%s) \n [Wipefest](%s) \n [WoWAnalyzer](%s)",
-                        warcraftlogsLink, wipefestLink, wowanalyzerLink),
-                true);
+        //ToDo: DPS muss DPS Parses machen
+        //ToDo: Tank braucht DPS und HPS
+        //ToDo: Healer braucht HPS
+
+        //ToDo: Funktion schreiben um das einfacher zu machen -> Liste rein un der Handler hat funktionen die das alles schön rausparsen
+
+
+        builder.addField("(DPS/HPS) Tanks", handler.GetParseStringForRole(RoleType.TANK), true);
+        builder.addField("(HPS) Healers", handler.GetParseStringForRole(RoleType.HEALER), true);
+        builder.addField("(DPS) DPS", handler.GetParseStringForRole(RoleType.DPS), true);
+
+        // Link Section
+
+        AddStringSectionToEmbed(builder, report.getReport().getCode());
 
         return builder;
-    }
-
-    private void SortHashMapAndBuildString(HashMap<Character, Integer> map, StringBuilder builder, int fightCount) {
-        AtomicInteger limiter = new AtomicInteger(0);
-        map.entrySet().stream()
-                .sorted(Map.Entry.<Character, Integer>comparingByValue().reversed())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (oldValue, newValue) -> oldValue, LinkedHashMap::new))
-                .forEach((character, integer) -> {
-                    limiter.getAndIncrement();
-                    if(limiter.get() > 10) return;
-
-                    builder.append(GetColorForParse(integer / fightCount))
-                            .append(" ")
-                            .append(character.GetSpecAsIcon())
-                            .append(" - ")
-                            .append(character.getName())
-                            .append("\n");
-
-                });
-
-        if(limiter.get() <= 10) return;
-        builder.append("+ ").append(map.size() - 10).append(" ...");
     }
 
     private String GetBasicActors(List<Actor> actors){
@@ -200,11 +150,14 @@ public class InteractionEventHandler extends ListenerAdapter {
         return sb.toString();
     }
 
-    private String GetColorForParse(int parse){
-        if(parse == 100) return EmojiStorage.YELLOW_DIAMOND;
-        if(parse >= 25 && parse <= 49) return EmojiStorage.GREEN_DIAMOND;
-        if(parse >= 50 && parse <= 74) return EmojiStorage.BLUE_DIAMOND;
-        if(parse >= 75 && parse <= 99) return EmojiStorage.PURPLE_DIAMOND;
-        return EmojiStorage.GRAY_DIAMOND;
+    private void AddStringSectionToEmbed(EmbedBuilder builder, String reportCode){
+        String warcraftlogsLink = "https://warcraftlogs.com/reports/" + reportCode;
+        String wipefestLink = "https://www.wipefest.gg/report/" + reportCode;
+        String wowanalyzerLink = "https://wowanalyzer.com/report/" + reportCode;
+
+        builder.addField("Links",
+                String.format("[WarcraftLogs](%s) \n [Wipefest](%s) \n [WoWAnalyzer](%s)",
+                        warcraftlogsLink, wipefestLink, wowanalyzerLink),
+                true);
     }
 }
