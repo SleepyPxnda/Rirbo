@@ -112,18 +112,12 @@ public class InteractionEventHandler extends ListenerAdapter {
 
         RankingHandler handler = new RankingHandler(report.getReport().getDpsParses().getData(), report.getReport().getHpsParses().getData());
 
-        //ToDo: DPS muss DPS Parses machen
-        //ToDo: Tank braucht DPS und HPS
-        //ToDo: Healer braucht HPS
-
-        //ToDo: Funktion schreiben um das einfacher zu machen -> Liste rein un der Handler hat funktionen die das alles schön rausparsen
-
 
         builder.addField("(DPS/HPS) Tanks", handler.GetParseStringForRole(RoleType.TANK), true);
         builder.addField("(HPS) Healers", handler.GetParseStringForRole(RoleType.HEALER), true);
         builder.addField("(DPS) DPS", handler.GetParseStringForRole(RoleType.DPS), true);
 
-        // Link Section
+        // Link Sections
 
         AddStringSectionToEmbed(builder, report.getReport().getCode());
 
