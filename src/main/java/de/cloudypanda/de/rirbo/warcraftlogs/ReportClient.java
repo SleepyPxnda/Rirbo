@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
@@ -17,7 +18,6 @@ public class ReportClient {
 
     private final WebClient webclient;
     private final Logger logger = LoggerFactory.getLogger(ReportClient.class);
-    private final String graphQuery = "query reportById($report: String) { reportData { report(code: $report) { title startTime endTime code fights { difficulty encounterID averageItemLevel bossPercentage fightPercentage friendlyPlayers kill } masterData { actors(type: \"player\") { id name server subType }} zone { encounters { id name }}}}}";
 
     public ReportClient(WebClient.Builder webClientBuilder){
         this.webclient = webClientBuilder

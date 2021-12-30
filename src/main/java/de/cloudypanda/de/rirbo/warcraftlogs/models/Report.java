@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @ToString
@@ -21,5 +22,12 @@ public class Report {
 
     private Zone zone;
 
-    private Rankings rankings;
+    private Rankings dpsParses;
+    private Rankings hpsParses;
+
+
+    public List<Fight> GetFightsForEncounter(int encounterId){
+        return this.getFights().stream()
+                .filter(fight -> fight.getEncounterID().equals(encounterId)).collect(Collectors.toList());
+    }
 }
