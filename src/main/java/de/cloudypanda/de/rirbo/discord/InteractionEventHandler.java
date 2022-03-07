@@ -5,10 +5,9 @@ import de.cloudypanda.de.rirbo.ContextAwareClass;
 import de.cloudypanda.de.rirbo.warcraftlogs.RankingHandler;
 import de.cloudypanda.de.rirbo.warcraftlogs.ReportHandler;
 import de.cloudypanda.de.rirbo.warcraftlogs.models.*;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.Character;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +30,8 @@ public class InteractionEventHandler extends ListenerAdapter {
     }
 
     @Override
-    public void onSlashCommand(SlashCommandEvent event){
-        if(!event.getCommandId().equals("859206768554278942")) return;
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event){
+        if(!event.getName().equals("log")) return;
 
         String logLink = event.getOption("warcraftlog_link").getAsString();
 
