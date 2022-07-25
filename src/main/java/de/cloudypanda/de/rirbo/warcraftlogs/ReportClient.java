@@ -14,7 +14,6 @@ public class ReportClient {
 
     @Value("${access_token}")
     private final String access_token;
-
     private final WebClient webclient;
     private final Logger logger = LoggerFactory.getLogger(ReportClient.class);
 
@@ -30,8 +29,8 @@ public class ReportClient {
         String variables = null;
 
         try {
-            query = GraphQlSchemaReader.getSchemaFromFileName("schema");
-            variables = GraphQlSchemaReader.getSchemaFromFileName("variables");
+            query = GraphQlSchemaReader.getSchemaFromFileName("warcraft_logs");
+            variables = GraphQlSchemaReader.getSchemaFromFileName("warcraft_logs_vars");
         }catch (Exception e){
             logger.error("Failed to get GraphQL Schema", e);
         }

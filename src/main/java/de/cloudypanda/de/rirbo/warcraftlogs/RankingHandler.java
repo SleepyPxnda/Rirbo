@@ -150,5 +150,4 @@ public class RankingHandler {
         if(parse >= 75 && parse <= 99) return EmojiStorage.PURPLE_DIAMOND;
         return EmojiStorage.GRAY_DIAMOND;
     }
-
 }
