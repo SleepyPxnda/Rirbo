@@ -1,10 +1,9 @@
 package de.cloudypanda.de.rirbo.discord;
 
-import com.iwebpp.crypto.TweetNaclFast;
 import de.cloudypanda.de.rirbo.ContextAwareClass;
 import de.cloudypanda.de.rirbo.warcraftlogs.RankingHandler;
 import de.cloudypanda.de.rirbo.warcraftlogs.ReportHandler;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.*;
+import de.cloudypanda.de.rirbo.warcraftlogs.warcraft_models.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -15,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 
 @Service

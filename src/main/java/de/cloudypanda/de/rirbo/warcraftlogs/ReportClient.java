@@ -2,12 +2,11 @@ package de.cloudypanda.de.rirbo.warcraftlogs;
 
 import de.cloudypanda.de.rirbo.warcraftlogs.graphqlutils.GraphQlRequestBody;
 import de.cloudypanda.de.rirbo.warcraftlogs.graphqlutils.GraphQlSchemaReader;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.ReportDTO;
+import de.cloudypanda.de.rirbo.warcraftlogs.warcraft_models.ReportDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StopWatch;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service

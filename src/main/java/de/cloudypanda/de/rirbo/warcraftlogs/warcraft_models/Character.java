@@ -1,4 +1,4 @@
-package de.cloudypanda.de.rirbo.warcraftlogs.models;
+package de.cloudypanda.de.rirbo.warcraftlogs.warcraft_models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.cloudypanda.de.rirbo.discord.EmojiStorage;

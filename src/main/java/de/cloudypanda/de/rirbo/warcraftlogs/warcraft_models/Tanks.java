@@ -1,4 +1,4 @@
-package de.cloudypanda.de.rirbo.warcraftlogs.models;
+package de.cloudypanda.de.rirbo.warcraftlogs.warcraft_models;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +9,7 @@ import java.util.List;
 @ToString
 @NoArgsConstructor
 @Getter
-public class Dps {
+public class Tanks {
     public String name;
     public List<Character> characters;
 }

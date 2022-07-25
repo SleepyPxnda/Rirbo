@@ -1,6 +1,6 @@
 package de.cloudypanda.de.rirbo.warcraftlogs;
 
-import de.cloudypanda.de.rirbo.warcraftlogs.models.ReportDTO;
+import de.cloudypanda.de.rirbo.warcraftlogs.warcraft_models.ReportDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

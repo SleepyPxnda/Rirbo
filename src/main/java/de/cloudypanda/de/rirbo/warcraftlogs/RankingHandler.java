@@ -1,7 +1,7 @@
 package de.cloudypanda.de.rirbo.warcraftlogs;
 
 import de.cloudypanda.de.rirbo.discord.EmojiStorage;
-import de.cloudypanda.de.rirbo.warcraftlogs.models.*;
+import de.cloudypanda.de.rirbo.warcraftlogs.warcraft_models.*;
 
 import java.util.*;
 
